@@ -24,7 +24,7 @@ client.once("ready", () => {
 });
 
 client.on("messageCreate", async (message) => {
-  if (message.content !== "!play") return;
+  if (message.content !== "!glxmus1") return;
   if (!message.member.voice.channel)
     return message.reply("❌ Tu dois être dans un salon vocal.");
 
@@ -53,3 +53,4 @@ player.on(AudioPlayerStatus.Idle, () => {
 });
 
 client.login(process.env.TOKEN);
+
