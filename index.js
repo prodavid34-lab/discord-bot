@@ -11,7 +11,7 @@ const path = require("path");
 
 const AUTHORIZED_ID = "566510674424102922";
 const GUILD_ID = "719294957856227399";
-const VOICE_CHANNEL_ID = "1174486339958358136";
+const VOICE_CHANNEL_ID = "1298625202090934336";
 
 const client = new Client({
   intents: [
@@ -113,6 +113,7 @@ player.on(AudioPlayerStatus.Idle, () => {
 });
 
 client.login(process.env.TOKEN);
+
 
 
 
