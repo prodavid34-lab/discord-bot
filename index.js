@@ -26,25 +26,43 @@ const player = createAudioPlayer();
 let connection = null;
 let autoJoinEnabled = false;
 
-function connectToVoice(guild) {
+async function connectToVoice() {
   if (!autoJoinEnabled) return;
 
-  connection = joinVoiceChannel({
-    channelId: VOICE_CHANNEL_ID,
-    guildId: guild.id,
-    adapterCreator: guild.voiceAdapterCreator,
-  });
+  try {
+    const guild = await client.guilds.fetch(GUILD_ID);
+    const channel = await guild.channels.fetch(VOICE_CHANNEL_ID);
 
-  connection.subscribe(player);
+    if (!channel || channel.type !== 2) {
+      console.error("❌ Salon vocal introuvable ou invalide");
+      return;
+    }
 
-  // 🔁 Reconnexion automatique
-  connection.on(VoiceConnectionStatus.Disconnected, () => {
-    if (!autoJoinEnabled) return;
+    console.log("🔊 Tentative de connexion au vocal...");
 
-    setTimeout(() => {
-      connectToVoice(guild);
-    }, 2000);
-  });
+    connection = joinVoiceChannel({
+      channelId: channel.id,
+      guildId: guild.id,
+      adapterCreator: guild.voiceAdapterCreator,
+      selfDeaf: false,
+    });
+
+    connection.subscribe(player);
+
+    connection.on(VoiceConnectionStatus.Ready, () => {
+      console.log("✅ Connecté au vocal !");
+    });
+
+    connection.on(VoiceConnectionStatus.Disconnected, () => {
+      console.log("⚠️ Déconnecté du vocal, reconnexion...");
+      if (!autoJoinEnabled) return;
+
+      setTimeout(() => connectToVoice(), 2000);
+    });
+
+  } catch (err) {
+    console.error("❌ Erreur connexion vocal :", err);
+  }
 }
 
 client.once("ready", () => {
@@ -55,11 +73,11 @@ client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
   if (message.author.id !== AUTHORIZED_ID) return;
 
-  // ▶️ DÉMARRER
+  // ▶️ START
   if (message.content === "!glxmus1") {
     autoJoinEnabled = true;
 
-    connectToVoice(message.guild);
+    await connectToVoice();
 
     const resource = createAudioResource(
       path.join(__dirname, "son.mp3")
@@ -69,7 +87,7 @@ client.on("messageCreate", async (message) => {
     return message.reply("🎵 Lecture lancée + connexion automatique activée.");
   }
 
-  // ⏹️ ARRÊTER
+  // ⏹️ STOP
   if (message.content === "!glxmus1st") {
     autoJoinEnabled = false;
 
@@ -84,7 +102,7 @@ client.on("messageCreate", async (message) => {
   }
 });
 
-// 🔁 Boucle audio
+// 🔁 LOOP AUDIO
 player.on(AudioPlayerStatus.Idle, () => {
   if (!autoJoinEnabled) return;
 
@@ -95,6 +113,7 @@ player.on(AudioPlayerStatus.Idle, () => {
 });
 
 client.login(process.env.TOKEN);
+
 
 
 
